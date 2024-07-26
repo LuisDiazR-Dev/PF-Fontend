@@ -72,7 +72,7 @@ const CreateProjectPage = () => {
 			console.log(error)
 		}
 	}
-
+	
 	const handleAddTag = () => {
 		if (
 			formData.tags.length < 5 &&

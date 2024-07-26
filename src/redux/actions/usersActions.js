@@ -37,13 +37,12 @@ export const getUserById = (id) => {
 export const updateUser = (userData, token) => {
 	return async (dispatch) => {
 		try {
-			console.log(userData)
-			const { data } = await axios.put(`/users`, {userData}, {
+			const { data } = await axios.put(`/users/profile`, {userData}, {
 				headers: {
 					Authorization: `Bearer ${token}`,
 				},
 			})
-			console.log("NO FUNCIONA: ", data)
+			console.log("FUNCIONA: ", data)
 			dispatch({ type: UPDATE_USER, payload: data })
 		} catch (error) {
 			dispatch({ type: FETCH_ERROR, payload: error.message })
@@ -51,10 +50,10 @@ export const updateUser = (userData, token) => {
 	}
 }
 
-export const deleteUserById = (id, token) => {
+export const deleteUserById = (token) => {
 	return async (dispatch) => {
 		try {
-			await axios.delete(`/users/${id}`, {
+			await axios.delete(`/users`, {
 				headers: {
 					Authorization: `Bearer ${token}`,
 				},

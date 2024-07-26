@@ -1,18 +1,32 @@
-import { useEffect } from "react";
+import axios from 'axios'
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate, useParams } from "react-router-dom";
-import { getUserById, updateUser, logoutUser, deleteProject, deleteUserById } from "../../redux/actions";
+import { useNavigate } from "react-router-dom";
+import { updateUser, logoutUser, deleteUserById, getUserProfile } from "../../redux/actions";
 import styles from './UpdateUserPage.module.css';
 import * as Yup from 'yup';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 
 const UpdateUserPage = () => {
 
+const user = useSelector((state) => state.auth.loggedUser);
+const { token } = useSelector((state) => state.auth);
+console.log(user, "\n", token)
 const navigate = useNavigate()
 const dispatch = useDispatch()
-const user = useSelector((state)=>state.auth.loggedUser)
-const { token } = useSelector((state)=>state.auth)
-console.log(user)
+
+useEffect(()=>{
+    getUserProfile(token)
+}, [])
+
+const validatePassword2 = (password, password2) => {
+    if (password && password2) {
+      return password === password2
+        ? true
+        : 'Las contraseñas deben coincidir';
+    }
+    return true; // No se valida si password está vacío
+  };
 
 const validationSchema = Yup.object().shape({
     userName:Yup.string()
@@ -23,7 +37,10 @@ const validationSchema = Yup.object().shape({
     .min(6, 'La contraseña debe de ser de al menos 6 carácteres')
     .matches(/[A-Z]/, 'La contraseña debe de contener al menos una mayúscula'),
     password2: Yup.string()
-    .oneOf([Yup.ref('password'), null], 'Las contraseñas deben coincidir'),
+    .test('password2-match', 'Las contraseñas deben coincidir', function(value){
+    const { password } = this.parent; 
+    return validatePassword2(password, value);
+    }),
     bio:Yup.string()
     .min(2, 'La biografía es muy corta')
     .max(50, 'La biografía es muy larga'),
@@ -31,22 +48,58 @@ const validationSchema = Yup.object().shape({
 })
 
 const handleSubmit = async(values, {setSubmitting}) => {
-    const { userName, password, bio, image } = values;
-    const userData = { userName, password, bio, image };
-
+    const userData = Object.fromEntries(
+    Object.entries(values).filter(([key, value]) => value !== '')
+    )
     dispatch(updateUser(userData, token))
     setSubmitting(false)
     dispatch(logoutUser())
     navigate('/login')
-    
+}
+
+const [finish, setFinish] = useState(false)
+const preFinishUser = () => {
+    setFinish(true)
+}
+
+const unFinish = () => {
+    setFinish(false)
 }
 
 const finishUser = () => {
-    dispatch(deleteUserById(user.id, token))
-    console.log("SALAMALECOMALECONSALÁ")
+    dispatch(deleteUserById(token))
+
     dispatch(logoutUser())
     navigate('/home')
 }
+
+// const handleUploadImage = async (e) => {
+//     const imageUpload = e.target.files[0]
+//     const url =
+//         'https://api.imgbb.com/1/upload?key=54253385757dc7d196411b16962bfda3'
+
+//     if (!imageUpload) {
+//         console.log('No file selected.')
+//         return
+//     }
+
+//     const formData = new FormData()
+//     formData.append('image', imageUpload)
+
+
+    // try {
+    //     const result = await axios.post(url, formData, {
+    //         headers: {
+    //             'Content-Type': 'multipart/form-data',
+    //         },
+    //     })
+    //     const urlImagen = result.data.data.url
+    //     setImagenAddHosting(urlImagen)
+    //     console.log('Image uploaded successfully:', urlImagen)
+    // } catch (error) {
+    //     console.error('Error uploading image:', error)
+    // }
+// }
 
 return (
     <div className="row justify-content-center">
@@ -72,6 +125,7 @@ return (
         >
         {({ handleSubmit, handleChange, handleBlur, values, errors, isSubmitting }) => (
             <Form style={{width:"50%"}}>
+
 
                 <div className="mb-3 position-relative">
                 <Field type="text" name="userName" id="userName" key="userName"
@@ -116,6 +170,19 @@ return (
                 <label className={`${styles['form-label']}`}>Imagen</label>
                 </div>
                 <ErrorMessage name="image" component="div" className="text-danger" />
+
+                {/* <div className="mb-3">
+				<label htmlFor="image" className="form-label">
+					Imagen
+				</label>
+				<input
+					type="file"
+					id="image"
+					name="image"
+					className="form-control"
+					onChange={handleUploadImage}
+				/>
+                </div> */}
                 <br />
 
                 <button type="submit" className="btn btn-primary" style={{textDecoration:"none"}} disabled={isSubmitting}>
@@ -125,10 +192,21 @@ return (
                 </Form>)}
                 </Formik>
                 <br /><br />
-                <button className="btn btn-danger" onClick={finishUser} style={{width:"50%", fontWeight:"bold", fontSize:"20px", textDecoration:"none"}}>
+                <button className="btn btn-danger" onClick={preFinishUser} style={{width:"50%", fontWeight:"bold", fontSize:"20px", textDecoration:"none"}}>
                     Eliminar cuenta
+                </button><br />
+
+                {finish ? <div>
+                <button className="btn btn-danger" onClick={finishUser} style={{fontWeight:"bold", fontSize:"20px", textDecoration:"none", margin:"0px 10px"}}>
+                    Confirmar
                 </button>
 
+                <button className="btn btn-primary" onClick={unFinish} style={{fontWeight:"bold", fontSize:"20px", textDecoration:"none", margin:"0px 10px"}}>
+                    Cancelar
+                </button>
+                </div> : null}
+
+<br /><br />
                     </div>
     </div>
 );
