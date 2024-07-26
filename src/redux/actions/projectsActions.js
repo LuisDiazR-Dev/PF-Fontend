@@ -12,30 +12,35 @@ import {
 	GET_DELETED_PROJ,
 	GET_DELETED_PROJECTS,
 	RESTORE_PROJECT,
+	UPDATE_PROJECT_BY_ID,
+	DELETE_PROJECT_BY_ID,
 } from '../types'
 
 const IMAGE_URL = `https://api.imgbb.com/1/upload?key=54253385757dc7d196411b16962bfda3`
 
-export const getAllProjects = (pagination, title, tags, technologies, sort) => {
+export const getAllProjects = (data, token) => {
+	const { pagination, title, tags, technologies, sort } = data
 	return async (dispatch) => {
-		console.log('Tags:', tags, 'Technologies:', technologies)
 		try {
 			const params = new URLSearchParams()
 
 			if (pagination) params.append('pageSize', pagination)
 			if (title) params.append('title', title)
-			if (tags && tags.length > 0)
-				params.append('tags', tags)
+			if (tags && tags.length > 0) params.append('tags', tags)
 			if (technologies && technologies.length > 0)
 				params.append('technologies', technologies)
 			if (sort) params.append('sort', sort)
-
-			const projectsResponse = await axios.get(`/projects?${params.toString()}`)
-			const projects = projectsResponse.data
+			const { data } = token
+				? await axios.get(`/projects?${params.toString()}`, {
+						headers: {
+							Authorization: `Bearer ${token}`,
+						},
+				  })
+				: await axios.get(`/projects?${params.toString()}`)
 
 			dispatch({
 				type: FETCH_PROJECTS,
-				payload: projects,
+				payload: data,
 			})
 
 			dispatch({
@@ -56,46 +61,6 @@ export const getAllProjects = (pagination, title, tags, technologies, sort) => {
 	}
 }
 
-// export const filterTags = (pagination, tags, technologies) => {
-// 	return async (dispatch) => {
-// 		try {
-// 			const techData = (await axios.get('/techologies')).data
-// 			const tagsData = (await axios.get('/tags')).data
-// 			const params = new URLSearchParams()
-
-// 			if (pagination) params.append('pageSize', pagination)
-// 			if (technologies) params.append('technologies', technologies)
-// 			else
-// 				params.append(
-// 					'technologies',
-// 					techData.map((tech) => tech.name).join(',')
-// 				)
-// 			if (tags) params.append('tags', tags)
-// 			else params.append('tags', tagsData.map((t) => t.name).join(','))
-
-// 			const projects = await axios.get(`/projects?${params.toString()}`)
-
-// 			dispatch({
-// 				type: FETCH_PROJECTS,
-// 				payload: projects.data,
-// 			})
-// 			dispatch({
-// 				type: FILTER_TAGS,
-// 				payload: tags,
-// 			})
-// 			dispatch({
-// 				type: FILTER_TECHNOLOGIES,
-// 				payload: technologies,
-// 			})
-// 		} catch (error) {
-// 			dispatch({
-// 				type: FETCH_ERROR,
-// 				payload: error.message,
-// 			})
-// 		}
-// 	}
-// }
-
 export const getProjectById = (id) => async (dispatch) => {
 	try {
 		const { data } = await axios.get(`/projects/${id}`)
@@ -113,24 +78,35 @@ export const getProjectById = (id) => async (dispatch) => {
 
 export const createProject = (projectData, token) => {
 	return async (dispatch) => {
-		try {
-			const { data } = await axios.post('/projects', projectData, {
+	  try {
+		const transformedData = {
+		  ...projectData,
+		  tags: projectData.tags.map(tag => ({ tagName: tag.tagName || tag })), 
+		  technologies: projectData.technologies.map(tech => ({ name: tech })),
+		};
+		console.log('Datos a enviar:', transformedData);
+
+			const { data } = await axios.post('/projects', transformedData, {
 				headers: {
 					Authorization: `Bearer ${token}`,
 				},
-			})
+			});
+
 			dispatch({
 				type: CREATE_PROJECT,
 				payload: data,
-			})
+			});
 		} catch (error) {
+			console.error('Error al crear el proyecto:', error.response ? error.response.data : error.message);
 			return dispatch({
 				type: FETCH_ERROR,
-				payload: error.message,
-			})
+				payload: error.response ? error.response.data : error.message,
+			});
 		}
-	}
-}
+	};
+};
+
+
 
 export const updateProject = (dataToSubmit, token) => {
 	return async function (dispatch) {
@@ -150,7 +126,7 @@ export const updateProject = (dataToSubmit, token) => {
 				payload: data,
 			})
 		} catch (error) {
-			console.error('Update project error:', error.response || error.message) // Log the error response
+			console.error('Update project error:', error.response || error.message) 
 			return dispatch({
 				type: FETCH_ERROR,
 				payload: error.response ? error.response.data : error.message,
@@ -268,3 +244,30 @@ export const uploadImage = (image) => {
 		}
 	}
 }
+
+export const deleteProjectById = (projectId, token) => async (dispatch) => {
+	try {
+		await axios.delete(`/projects/${projectId}`, {
+			headers: { Authorization: `Bearer ${token}` },
+		})
+		dispatch({ type: DELETE_PROJECT_BY_ID, payload: projectId })
+	} catch (error) {
+		console.error('Error deleting project:', error)
+	}
+}
+
+export const updateProjectById = (formData, token) => async (dispatch) => {
+    try {
+        const response = await axios.put(
+            `/projects/${formData.get('id')}`,
+            formData,
+            {
+                headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' },
+            }
+        );
+        dispatch({ type: UPDATE_PROJECT_BY_ID, payload: response.data });
+    } catch (error) {
+        console.error('Error updating project:', error);
+    }
+};
+

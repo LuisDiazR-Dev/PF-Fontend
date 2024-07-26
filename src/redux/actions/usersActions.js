@@ -48,7 +48,7 @@ export const updateUser = (userData, token) => {
 			dispatch({ type: FETCH_ERROR, payload: error.message })
 		}
 	}
-}
+  }
 
 export const deleteUserById = (token) => {
 	return async (dispatch) => {
@@ -58,7 +58,7 @@ export const deleteUserById = (token) => {
 					Authorization: `Bearer ${token}`,
 				},
 			})
-			dispatch({ type: DELETE_USER })
+			dispatch({ type: DELETE_USER, payload: id })
 		} catch (error) {
 			dispatch({ type: FETCH_ERROR, payload: error.message })
 		}
