@@ -1,217 +1,202 @@
-import { useState, useEffect } from 'react'
-import { useSelector, useDispatch } from 'react-redux'
+import { useState, useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { useParams, useLocation, useNavigate } from 'react-router-dom';
+import Tabs from '../../components/tabs/Tabs';
+import styles from './ProfilePage.module.css';
+import Toastify from 'toastify-js';
+import ModalForm from './components/ModalForm';
+import ProfileData from '../../components/profile-data/ProfileData';
+
 import {
-	getUserProfile,
-	cancelSubscription,
-	getUserById,
-	getDeletedProjects,
-	restoreDeletedProject,
-} from '../../redux/actions'
-import { Link, useParams } from 'react-router-dom'
-import Cards from '../../components/cards/Cards'
-import Tabs from './components/Tabs'
-import styles from './ProfilePage.module.css'
-import { Pencil } from 'lucide-react'
-import Toastify from 'toastify-js'
-import 'toastify-js/src/toastify.css'
+  createReview,
+  getUserProfile,
+  cancelSubscription,
+  getUserById,
+  getDeletedProjects,
+  restoreDeletedProject,
+  contractForm,
+  deleteReviewById
+} from '../../redux/actions';
+import 'toastify-js/src/toastify.css';
 
 const ProfilePage = () => {
-	const dispatch = useDispatch()
-	const [showModal, setShowModal] = useState(false)
-	const [projects, setProjects] = useState([])
-	const { token, loggedUser } = useSelector((state) => state.auth)
-	const { deletedProjects } = useSelector((state) => state.projects)
-	const { loading, error } = useSelector((state) => state.subscription)
-	const { id } = useParams()
-	const { user } = useSelector((state) => state.users)
+  const categories = Object.freeze({
+    contracts: 'contracts',
+  });
 
+  const dispatch = useDispatch();
+  const [projects, setProjects] = useState([]);
+  const [showModal, setShowModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeContractTab, setActiveContractTab] = useState(categories.contracts);
+  const [activeTab, setActiveTab] = useState('projects');
+  const [reload, setReload] = useState(false);
 
-	const handleUnsubscribe = () => {
-		setShowModal(true)
-	}
+  const { token, loggedUser } = useSelector((state) => state.auth);
+  const { deletedProjects } = useSelector((state) => state.projects);
+  const { loading } = useSelector((state) => state.subscription);
+  const { user } = useSelector((state) => state.users);
+  const { id } = useParams();
+  const location = useLocation();
+  const navigate = useNavigate();
 
-	const confirmUnsubscribe = () => {
-		dispatch(cancelSubscription(token)).then(() => {
-			dispatch(getUserProfile(token))
-			setShowModal(false)
-		})
-	}
+  const profileData = !id ? loggedUser : user;
 
-	const handleRestore = (projectId) => {
-		dispatch(restoreDeletedProject(projectId, token)).then(() => {
-			Toastify({
-				text: 'Proyecto restaurado',
-				duration: 3000,
-				close: true,
-				gravity: 'top',
-				position: 'center',
-				backgroundColor: '#4CAF50',
-				stopOnFocus: true,
-			}).showToast()
-			dispatch(getUserProfile(token))
-			setProjects(loggedUser.projects)
-		})
-	}
+  const [formData, setFormData] = useState({
+    senderId: '',
+    receiverId: '',
+    subject: '',
+    projectDescription: '',
+    budget: '',
+    currency: 'ARS',
+    availableTime: '',
+    status: 'pending',
+  });
 
-	useEffect(() => {
-		if (loggedUser?.id === id || !id) {
-			dispatch(getUserProfile(token))
-			dispatch(getDeletedProjects(token))
-			setProjects(loggedUser.projects)
-		} else {
-			dispatch(getUserById(id))
-		}
-	}, [dispatch, token, projects, id, loggedUser.id])
+  const handleUnsubscribe = () => {
+    const confirm = window.confirm(
+      '¿Estás seguro de que deseas cancelar tu suscripción? Esta acción no se puede deshacer.'
+    );
+    if (confirm) {
+      dispatch(cancelSubscription(token)).then(() => {
+        dispatch(getUserProfile(token));
+      });
+    }
+  };
 
-	if (!loggedUser) return <div>Loading ...</div>
+  const handleForm = () => {
+    setFormData({
+      ...formData,
+      senderId: loggedUser.id,
+      receiverId: id,
+    });
+    setShowModal(true);
+  };
 
-	// const isOwner = !id  user
-	const profileData = !id ? loggedUser : user
+  const handleContractFormSubmit = (form) => {
+    dispatch(contractForm(form, token));
+    setShowModal(false);
+  };
 
-	const tabs = [
-		{
-			key: 'projects',
-			label: 'Proyectos',
-			content: (
-				<div>
-					<div className={styles.projectsHeader}>
-						<h1>Proyectos:</h1>
-						{loggedUser?.id === profileData?.id &&
-							profileData?.planName !== 'Premium' &&
-							profileData?.role !== 'admin' && (
-								<Link to="/subscription">
-									<button className={`btn ${styles['btn-dark-blue']}`}>
-										Actualizar a PRO
-									</button>
-								</Link>
-							)}
-					</div>
-					<div className={styles.cardsContainer}>
-						<Cards projects={profileData === loggedUser ? loggedUser?.projects : user?.projects} />
-					</div>
-				</div>
-			),
-		},
-	]
+  const handleReviewFormSubmit = (reviewData, handleCloseModal, id) => {
+    if (id) {
+      dispatch(createReview({ ...reviewData, reviewedUserId: id }, token, id))
+        .then(() => {
+          dispatch(getUserProfile(token));
+          handleCloseModal();
+          setReload(prev => !prev);
+          Toastify({
+            text: 'Review publicado exitosamente',
+            duration: 3000,
+            close: true,
+            gravity: 'top',
+            position: 'center',
+            backgroundColor: '#4CAF50',
+            stopOnFocus: true,
+          }).showToast();
+        });
+    }
+  };
 
-	if (loggedUser?.id === profileData?.id) {
-		tabs.push({
-			key: 'archived',
-			label: 'Archivados',
-			content: (
-				<div>
-					<h1>Proyectos Archivados:</h1>
-					<div className={styles.cardsContainer}>
-						<Cards projects={deletedProjects} onRestore={handleRestore} />
-					</div>
-				</div>
-			),
-		})
-	}
+  const handleRestore = (projectId) => {
+    dispatch(restoreDeletedProject(projectId, token)).then(() => {
+      Toastify({
+        text: 'Proyecto restaurado',
+        duration: 3000,
+        close: true,
+        gravity: 'top',
+        position: 'center',
+        backgroundColor: '#4CAF50',
+        stopOnFocus: true,
+      }).showToast();
+      dispatch(getUserProfile(token));
+      setProjects(loggedUser.projects);
+    });
+  };
 
-	return (
-		<div>
-			<div className={styles.banner}>
-				<h1 className={styles.title}>Bienvenido</h1>
-			</div>
-			<div className={styles.profileContainer}>
-				<div className={styles.card}>
-					<div className="m-3 text-center">
-						<img
-							className={styles.cardImg}
-							src={profileData?.image}
-							alt={profileData?.userName}
-						/>
-					</div>
+  const handleDelete = (id) => {
+    const confirm = window.confirm('¿Deseas eliminar la review?');
+    if (confirm) {
+      dispatch(deleteReviewById(id, token))
+        .then(() => {
+          setReload(prev => !prev);
+          Toastify({
+            text: 'Review eliminada correctamente',
+            duration: 3000,
+            close: true,
+            gravity: 'top',
+            position: 'center',
+            backgroundColor: '#4CAF50',
+            stopOnFocus: true,
+          }).showToast();
+        });
+    }
+  };
 
-					<div className={styles.cardBody}>
-						<h2 className="card-title">{profileData?.userName}</h2>
-						<p className="card-text">{profileData?.email}</p>
-						<p className="card-text">{profileData?.bio}</p>
-						<p className="card-text">{profileData?.role}</p>
-						{!id && (
-							<>
-							<hr />
-								<Link to="/create">
-									<button className={styles.btnCustom}>Crear proyecto</button>
-								</Link>
-								<Link to="/modUser">
-									<button className={styles.btnCustom}>
-										<Pencil /> Editar perfil
-									</button>
-								</Link>
-								{loggedUser?.planName === 'Premium' && (
-									<>
-										<button
-											className={styles.btnCustom}
-											onClick={handleUnsubscribe}
-											disabled={loading}
-										>
-											{loading ? 'Procesando...' : 'Desuscribirse'}
-										</button>
-										<div
-											className={`modal fade ${
-												showModal ? 'show d-block' : ''
-											}`}
-											tabIndex="-1"
-											role="dialog"
-											aria-labelledby="exampleModalLabel"
-											aria-hidden={!showModal}
-										>
-											<div className="modal-dialog" role="document">
-												<div className="modal-content">
-													<div className="modal-header">
-														<h5 className="modal-title">
-															Confirmar cancelación
-														</h5>
-														<button
-															type="button"
-															className="close"
-															onClick={() => setShowModal(false)}
-															aria-label="Close"
-														>
-															<span aria-hidden="true">&times;</span>
-														</button>
-													</div>
-													<div className="modal-body">
-														<p>
-															¿Estás seguro de que deseas cancelar tu
-															suscripción? Esta acción no se puede deshacer.
-														</p>
-													</div>
-													<div className="modal-footer">
-														<button
-															type="button"
-															className="btn btn-secondary"
-															onClick={() => setShowModal(false)}
-														>
-															Cancelar
-														</button>
-														<button
-															type="button"
-															className="btn btn-primary"
-															onClick={confirmUnsubscribe}
-														>
-															Confirmar
-														</button>
-													</div>
-												</div>
-											</div>
-										</div>
-									</>
-								)}
-							</>
-						)}
-						{error && <p className={styles.error}>{error}</p>}
-					</div>
-				</div>
-				<div className={styles.profileContent}>
-					<Tabs tabs={tabs} />
-				</div>
-			</div>
-		</div>
-	)
-	
-}
+  const handleTabClick = (category) => {
+    setActiveTab(category);
+    setSearchQuery('');
+    const newUrl = `${location.pathname}?tab=${category}`;
+    navigate(newUrl);
+  };
 
-export default ProfilePage
+  useEffect(() => {
+    const query = new URLSearchParams(location.search);
+    const tab = query.get('tab');
+    if (tab) {
+      setActiveTab(tab);
+    }
+  }, [location]);
+
+  useEffect(() => {
+    if (loggedUser?.id === id || !id) {
+      dispatch(getUserProfile(token));
+      dispatch(getDeletedProjects(token));
+      setProjects(loggedUser.projects);
+    } else {
+      dispatch(getUserById(id));
+    }
+  }, [dispatch, token, id, loggedUser?.id, reload]);
+
+  if (!loggedUser) return <div>Loading ...</div>;
+
+  return (
+    <div className={styles.container}>
+      <div className={styles.profileContainer}>
+        <div className={`${styles.banner} z-index-0`}></div>
+        {profileData ? (
+          <>
+            <ProfileData
+              profileData={profileData}
+              handleUnsubscribe={handleUnsubscribe}
+              loading={loading}
+              isCurrentUser={!id}
+              handleForm={handleForm}
+            />
+            <Tabs
+              profileData={profileData}
+              activeContractTab={activeContractTab}
+              searchQuery={searchQuery}
+              handleReviewFormSubmit={handleReviewFormSubmit}
+              onRestore={handleRestore}
+              deletedProjects={deletedProjects}
+              onClick={handleTabClick}
+              activeTab={activeTab}
+              handleDelete={handleDelete}
+            />
+          </>
+        ) : (
+          <div>Loading profile data...</div>
+        )}
+      </div>
+      <ModalForm
+        show={showModal}
+        handleClose={() => setShowModal(false)}
+        contract={formData}
+        handleSend={handleContractFormSubmit}
+      />
+    </div>
+  );
+};
+
+export default ProfilePage;

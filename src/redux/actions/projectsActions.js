@@ -35,7 +35,7 @@ export const getAllProjects = (data, token) => {
 						headers: {
 							Authorization: `Bearer ${token}`,
 						},
-				  })
+				})
 				: await axios.get(`/projects?${params.toString()}`)
 
 			dispatch({
@@ -78,42 +78,43 @@ export const getProjectById = (id) => async (dispatch) => {
 
 export const createProject = (projectData, token) => {
 	return async (dispatch) => {
-	  try {
-		const transformedData = {
-		  ...projectData,
-		  tags: projectData.tags.map(tag => ({ tagName: tag.tagName || tag })), 
-		  technologies: projectData.technologies.map(tech => ({ name: tech })),
-		};
-		console.log('Datos a enviar:', transformedData);
+		try {
+			const transformedData = {
+				...projectData,
+				tags: projectData.tags.map((tag) => ({ tagName: tag.tagName || tag })),
+				technologies: projectData.technologies.map((tech) => ({ name: tech })),
+			}
+			console.log('Datos a enviar:', transformedData)
 
 			const { data } = await axios.post('/projects', transformedData, {
 				headers: {
 					Authorization: `Bearer ${token}`,
 				},
-			});
+			})
 
 			dispatch({
 				type: CREATE_PROJECT,
 				payload: data,
-			});
+			})
 		} catch (error) {
-			console.error('Error al crear el proyecto:', error.response ? error.response.data : error.message);
+			console.error(
+				'Error al crear el proyecto:',
+				error.response ? error.response.data : error.message
+			)
 			return dispatch({
 				type: FETCH_ERROR,
 				payload: error.response ? error.response.data : error.message,
-			});
+			})
 		}
-	};
-};
-
-
+	}
+}
 
 export const updateProject = (dataToSubmit, token) => {
 	return async function (dispatch) {
 		try {
-			console.log('Token being used:', token) 
+			console.log('Token being used:', token)
 			const { data } = await axios.put(
-				`/projects/${dataToSubmit.id}`,
+				`/projects/profile/${dataToSubmit.id}`,
 				dataToSubmit,
 				{
 					headers: {
@@ -126,7 +127,7 @@ export const updateProject = (dataToSubmit, token) => {
 				payload: data,
 			})
 		} catch (error) {
-			console.error('Update project error:', error.response || error.message) 
+			console.error('Update project error:', error.response || error.message)
 			return dispatch({
 				type: FETCH_ERROR,
 				payload: error.response ? error.response.data : error.message,
@@ -232,6 +233,7 @@ export const uploadImage = (image) => {
 					},
 				})
 			).data
+			console.log(data.url);
 			return dispatch({
 				type: IMAGE_UPLOAD,
 				payload: data.url,
@@ -256,18 +258,43 @@ export const deleteProjectById = (projectId, token) => async (dispatch) => {
 	}
 }
 
-export const updateProjectById = (formData, token) => async (dispatch) => {
-    try {
-        const response = await axios.put(
-            `/projects/${formData.get('id')}`,
-            formData,
-            {
-                headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' },
-            }
-        );
-        dispatch({ type: UPDATE_PROJECT_BY_ID, payload: response.data });
-    } catch (error) {
-        console.error('Error updating project:', error);
-    }
-};
+export const updateProjectById = (dataToSubmit, id, token) => {
+	return async function (dispatch) {
+		try {
+			// Convert FormData to object
+			const data = Object.fromEntries(dataToSubmit.entries())
 
+			// Parse JSON strings to arrays
+			const parsedTags = JSON.parse(data.tags)
+			const parsedTechnologies = JSON.parse(data.technologies)
+
+			// Create the data object to send in the request
+			const requestData = {
+				...data,
+				tags: parsedTags,
+				technologies: parsedTechnologies,
+			}
+
+			console.log('DataToSubmit in action:', requestData)
+
+			const response = await axios.put(`/projects/${id}`, requestData, {
+				headers: {
+					Authorization: `Bearer ${token}`,
+					'Content-Type': 'application/json', // Change to 'application/json' since we are sending JSON
+				},
+			})
+
+			dispatch({
+				type: UPDATE_PROJECT_BY_ID,
+				payload: response.data,
+			})
+		} catch (error) {
+			console.error('Update project error:', error.response || error.message)
+
+			dispatch({
+				type: FETCH_ERROR,
+				payload: error.response ? error.response.data : error.message,
+			})
+		}
+	}
+}

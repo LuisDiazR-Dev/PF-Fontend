@@ -12,7 +12,7 @@ import ForgotPasswordPage from './view/forgot-password-page/ForgotPasswordPage'
 import PremiumPage from './view/premium-page/PremiumPage'
 import NotFoundPage from './view/not-found-page/NotFoundPage'
 import UpdateProjectPage from './view/update-project-page/UpdateProjectPage'
-import UpdateUserPage from './view/update-user-page/UpdateUserPage'
+import UpdateUserPag from './view/update-user-page/UpdateUserPag'
 import UsersPage from './view/users-page/UsersPage'
 import CreateProjectPage from './view/create-project-page/CreateProjectPage'
 import useAuth0TokenHandler from './hooks/useAuth0TokenHandler'
@@ -23,9 +23,10 @@ import PaymentSuccessPage from './view/payment-success-page/PaymentSuccessPage'
 import PaymentFailurePage from './view/payment-failure-page/PaymentFailurePage'
 import PaymentPendingPage from './view/payment-pending-page/PaymentPendingPage'
 import DeletedProjectDetailPage from './view/deleted-project-detail-page/DeletedProjectDetailPage'
+import ProFooter from './components/pro-footer/ProFooter'
 
-// import ProjectFiledPage from './view/project-filed-page/ProjectFiledPage'
 import LandingPage from './view/landing-page/LandingPage'
+import Dashboard from './view/dashboard-admin/dashboard'
 
 function App() {
 	const { isLoading } = useAuth0()
@@ -51,13 +52,9 @@ function App() {
 						<Route path="/forgotPassword" element={<ForgotPasswordPage />} />
 
 						<Route path="/dashboard" element={<AdminView />} />
-						<Route path="/modUser" element={<UpdateUserPage />} />
+						<Route path="/modUser" element={<UpdateUserPag />} />
 						<Route path="/modProject/:id" element={<UpdateProjectPage />} />
 						<Route path="/projects/:id" element={<ProjectDetailPage />} />
-						{/* <Route
-							path="/myprofile/myfiledproj"
-							element={<ProjectFiledPage />}
-						/> */}
 						<Route
 							path="/myprofile/myfiledproj/:id"
 							element={<DeletedProjectDetailPage />}
@@ -70,8 +67,10 @@ function App() {
 						<Route path="/paymentSuccess" element={<PaymentSuccessPage />} />
 						<Route path="/paymentFailure" element={<PaymentFailurePage />} />
 						<Route path="/paymentPending" element={<PaymentPendingPage />} />
+						<Route path="/escritorio" element={<Dashboard />} />
 					</Routes>
 				</div>
+				{/* <ProFooter /> */}
 				<Footer />
 			</div>
 		</>

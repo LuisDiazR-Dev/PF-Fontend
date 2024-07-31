@@ -3,19 +3,27 @@ import styled from 'styled-components'
 import AdminViewUsers from './AdminView-users'
 import AdminViewProjects from './AdminView-projects'
 import AdminViewTechnologies from './AdminView-technologies'
+import AdminViewData from './AdminViewData'
+import AdminViewContracts from './AdminView-contracts'
+import AdminViewDeletedUsers from './AdminView-deletedUsers'
+import AdminViewReviews from './AdminViewReviews'
 
 const AdminView = () => {
 	const categories = Object.freeze({
 		users: 'users',
 		projects: 'projects',
 		technologies: 'technologies',
+		contracts: 'contracts',
+		deletedUsers: 'deletedUsers',
+		reviews: 'reviews',
+		data: 'data',
 	})
 	const [activeTab, setActiveTab] = useState(categories.users)
 	const [searchQuery, setSearchQuery] = useState('')
 
 	const handleTabClick = (category) => {
 		setActiveTab(category)
-		setSearchQuery('') // Reset search query when switching tabs
+		setSearchQuery('')
 	}
 
 	return (
@@ -33,6 +41,19 @@ const AdminView = () => {
 								onClick={() => handleTabClick(categories.users)}
 							>
 								Usuarios
+							</a>
+						</li>
+						<li className="nav-item">
+							<a
+								className={`nav-link ${
+									activeTab === categories.deletedUsers ? 'active' : ''
+								}`}
+								aria-current={
+									activeTab === categories.deletedUsers ? 'page' : undefined
+								}
+								onClick={() => handleTabClick(categories.deletedUsers)}
+							>
+								Usuarios eliminados
 							</a>
 						</li>
 						<li className="nav-item">
@@ -63,10 +84,41 @@ const AdminView = () => {
 						</li>
 						<li className="nav-item">
 							<a
-								className={`nav-link ${activeTab ? 'disabled' : ''}`}
-								aria-current={activeTab ? 'page' : undefined}
+								className={`nav-link ${
+									activeTab === categories.contracts ? 'active' : ''
+								}`}
+								aria-current={
+									activeTab === categories.contracts ? 'page' : undefined
+								}
+								onClick={() => handleTabClick(categories.contracts)}
 							>
-								Próximamente...
+								Contratos
+							</a>
+						</li>
+						<li className="nav-item">
+							<a
+								className={`nav-link ${
+									activeTab === categories.reviews ? 'active' : ''
+								}`}
+								aria-current={
+									activeTab === categories.reviews ? 'page' : undefined
+								}
+								onClick={() => handleTabClick(categories.reviews)}
+							>
+								Reseñas
+							</a>
+						</li>
+						<li className="nav-item">
+							<a
+								className={`nav-link ${
+									activeTab === categories.data ? 'active' : ''
+								}`}
+								aria-current={
+									activeTab === categories.data ? 'page' : undefined
+								}
+								onClick={() => handleTabClick(categories.data)}
+							>
+								Datos
 							</a>
 						</li>
 						<li className="nav-item ">
@@ -96,6 +148,18 @@ const AdminView = () => {
 						)}
 						{activeTab === categories.technologies && (
 							<AdminViewTechnologies searchQuery={searchQuery} />
+						)}
+						{activeTab === categories.contracts && (
+							<AdminViewContracts searchQuery={searchQuery} />
+						)}
+						{activeTab === categories.deletedUsers && (
+							<AdminViewDeletedUsers searchQuery={searchQuery} />
+						)}
+						{activeTab === categories.data && (
+							<AdminViewData searchQuery={searchQuery} />
+						)}
+						{activeTab === categories.reviews && (
+							<AdminViewReviews searchQuery={searchQuery} />
 						)}
 					</div>
 				</div>

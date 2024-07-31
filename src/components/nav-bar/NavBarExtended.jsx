@@ -1,8 +1,7 @@
+import styles from "./NavBar.module.css"
 import LogoutButton from '../logout-button/LogoutButton.jsx'
 import { Gem } from 'lucide-react'
-
 import { setDarkMode, setLightMode } from '../../redux/actions'
-
 import { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { Link } from 'react-router-dom'
@@ -35,7 +34,7 @@ const NavBarExtended = () => {
 	}, [theme])
 
 	return (
-		<div>
+		<div className={styles.navbar}>
 			<nav className="navbar navbar-expand-lg p-3 bg-body-tertiary">
 				<div className="container-fluid">
 					<Link to={'/'}>
@@ -55,13 +54,9 @@ const NavBarExtended = () => {
 					<div className="collapse navbar-collapse" id="navbarSupportedContent">
 						<ul className="navbar-nav me-auto mb-2 mb-lg-0">
 							<li className="nav-item">
-								{/* --------------------------------- Explorer----------------------- */}
-								{/* <Link to={'/home'}>
-									<span className="nav-link active">Explorar</span>
-								</Link> */}
 								<div className="dropdown">
 									<a
-										className="btn btn-light dropdown-toggle"
+										className="btn btn-light dropdown-toggle fw-bold"
 										href="#"
 										role="button"
 										data-bs-toggle="dropdown"
@@ -82,42 +77,44 @@ const NavBarExtended = () => {
 											</Link>
 										</li>
 										<li>
-											<a className="dropdown-item" href="/explorer/tags">
-												Tags
-											</a>
+											{loggedUser?.role !== 'admin' && (
+												<a className="dropdown-item" href="/myprofile?tab=contracts">
+													Contratos
+												</a>
+											)}
 										</li>
 									</ul>
 								</div>
-
-								{/* --------------------------------- end Explorer ----------------------- */}
 							</li>
-							{loggedUser?.planName !== 'Premium' && (
-								<li className="nav-item">
-									<Link to={'/premium'}>
-										<span className="nav-link">ForDevPro</span>
-									</Link>
-								</li>
-							)}
-							{loggedUser && (
-								<li className="nav-item">
-									<Link to={'/myprofile'}>
-										<span className="nav-link ">
-											Perfil{loggedUser.planName === 'Premium' && <Gem />}
-										</span>
-									</Link>
-								</li>
-							)}
-							{loggedUser && loggedUser.role === 'admin' && (
+							{loggedUser?.planName !== 'Premium' &&
+								loggedUser?.role !== 'admin' && (
+									<li className="nav-item">
+										<Link to={'/premium'}>
+											<span className="nav-link">ForDevsPro</span>
+										</Link>
+									</li>
+								)}
+
+							{loggedUser && loggedUser?.role === 'admin' && (
 								<li className="nav-item">
 									<Link to={'/dashboard'}>
 										<span className="nav-link ">Admin-Console</span>
 									</Link>
 								</li>
 							)}
+
+							{loggedUser ?
+								(<li className="nav-item">
+									<Link to={'/create'}>
+										<span className="nav-link ">Nuevo proyecto</span>
+									</Link>
+								</li>)
+								: null
+							}
+
 						</ul>
 
 						{loggedUser ? (
-							//? -------------------- login ----------------
 							<ul className="navbar-nav mb-2 mb-lg-0">
 								<li className="nav-item dropdown">
 									<a
@@ -127,33 +124,31 @@ const NavBarExtended = () => {
 										data-bs-toggle="dropdown"
 										aria-expanded="false"
 									>
-										Hola {loggedUser.userName}
+										Hola {loggedUser?.userName}
 									</a>
 									<ul className="dropdown-menu">
 										<li>
-											<Link className="dropdown-item" to={`/modUser`}>
-												Mi perfil
+											<Link className="dropdown-item p-3" to={`/myprofile`}>
+												<span className="nav-link p-0 d-flex align-content-center gap-2">
+													Perfil{loggedUser?.planName === 'Premium' && <Gem size={20} />}
+												</span>
 											</Link>
 										</li>
 										<li>
-											<a className="dropdown-item" href="#">
-												Another action
+											<a className="dropdown-item p-3" href="/modUser">
+												Editar perfil
 											</a>
 										</li>
 										<li>
 											<hr className="dropdown-divider" />
 										</li>
-										<li className="">
+										<li className="py-2">
 											<LogoutButton className="dropdown-item " />
 										</li>
 									</ul>
 								</li>
 							</ul>
 						) : (
-							//*-------------------- end login----------------*/
-							// securePassword!
-
-							//? ----------------Sign in / Sign Up -------------------*/
 							<ul className="navbar-nav px-3">
 								<li className="nav-item">
 									<Link to={'/login'}>
@@ -166,10 +161,7 @@ const NavBarExtended = () => {
 									</Link>
 								</li>
 							</ul>
-							//* ----------------End -------------------*/
 						)}
-
-						{/*--------- Theme------------------- */}
 						<ul className="navbar-nav">
 							<li className="nav-item">
 								<button

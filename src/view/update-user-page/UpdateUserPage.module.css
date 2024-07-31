@@ -1,43 +1,44 @@
+.container {
+  max-width: 800px;
+  margin: auto;
+  padding: 20px;
+}
+
 .centerDiv{
-    display: flex;
-    /* justify-content: center; */
-    margin: auto;
-    margin-top: 2vh;
-    align-items: center;
-    width: 50%;
-    padding: 15px 7px;
-    font-size: 17px;
-    flex-direction: column;
+  width: 50%;
 }
 
-.custom-input {
-  border-radius: 10px;
-  padding: 10px;
-  transition: padding 0.3s, border-color 0.3s;
-
+.cardBody {
+  display: flex;
+  justify-content: space-between;
 }
 
-.custom-input:focus {
-  padding: 5px;
-  border-color: #80bdff;
-  box-shadow: none;
+.card-body {
+  padding: 20px;
 }
 
-.form-label {
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #6c757d;
-  transition: all 0.3s;
-  pointer-events: none;
-  z-index: 1;
+.card-title {
+  margin-bottom: 20px;
+  font-size: 1.5rem;
 }
 
-.custom-input:focus + .form-label,
-.custom-input.has-content + .form-label {
-  top: 5%;
-  transform: translateY(-120%) scale(1.4);
-  font-size: 12px;
-  color: #288b8b;
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.boldText {
+  font-weight: bold;
+}
+
+.listItem {
+  margin-bottom: 10px;
+}
+
+.customInput {
+  border-radius: 4px;
+  padding: 0.5rem;
+}
+
+.addButton, .removeButton, .saveButton {
+  border-radius: 4px;
 }
