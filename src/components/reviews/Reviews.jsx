@@ -29,14 +29,19 @@ const Reviews = ({ profileData, handleReviewFormSubmit, handleDelete }) => {
 												{calculateTimeAgo(review.createdAt)}
 											</span>
 										</div>
-										<button
-											className="btn p-0"
-											onClick={() => handleDelete(review.id)}
-										>
-											{profileData.id === review.reviewedUser.id && (
-												<X size={16} strokeWidth={5} color="#6c757d" className='mb-4' />
-											)}
-										</button>
+										{profileData.id === review.reviewedUser.id && (
+											<button
+												className="btn p-0"
+												onClick={() => handleDelete(review.id)}
+											>
+												<X
+													size={16}
+													strokeWidth={5}
+													color="#6c757d"
+													className="mb-4"
+												/>
+											</button>
+										)}
 									</div>
 								</div>
 								<div className={styles.reviewComment}>
@@ -58,17 +63,20 @@ const Reviews = ({ profileData, handleReviewFormSubmit, handleDelete }) => {
 					) : loggedUser?.id === profileData.id ? (
 						<span>No hay reviews en el perfil</span>
 					) : null}
-					<Link
-						className={styles.cardContent}
-						onClick={() => setShowModal(true)}
-					>
-						<div className={styles.iconContainer}>
-							<CirclePlus />
-						</div>
-						<div className={`${styles.createButton} border text-dark`}>
-							<span className={styles.createButtonSpan}>Añadir review</span>
-						</div>
-					</Link>
+					{/* Mostrar el botón "Añadir review" solo para usuarios Premium */}
+					{loggedUser.planName === 'Premium' && (
+						<Link
+							className={styles.cardContent}
+							onClick={() => setShowModal(true)}
+						>
+							<div className={styles.iconContainer}>
+								<CirclePlus />
+							</div>
+							<div className={`${styles.createButton} border text-dark`}>
+								<span className={styles.createButtonSpan}>Añadir review</span>
+							</div>
+						</Link>
+					)}
 				</div>
 			)}
 			<Modal
